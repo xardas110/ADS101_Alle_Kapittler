@@ -3,8 +3,6 @@
 #include <queue>
 #include <map>
 
-#define MAX_BITS_HUFFMAN 10
-
 enum NodeType
 {
 	Leaf,
@@ -27,11 +25,10 @@ struct HuffNode
 
 	NodeType GetNodeType() const;
 	
-	_Ret_maybenull_ const struct HuffLeaf* Find(_In_ int* &arrPtr, _In_count_(MAX_BITS_HUFFMAN) int arr[MAX_BITS_HUFFMAN]) const;
-	
 	void InTraverse() const;
 	
 	bool operator > (_In_ HuffNode* other) const { return this->frequency > other->frequency; }
+	bool operator < (_In_ HuffNode* other) const { return this->frequency < other->frequency; }
 
 private:
 	int frequency{ 0 };
@@ -41,47 +38,50 @@ private:
 
 class HuffLeaf : public HuffNode
 {
-	char symbol{0};
-	int* bits{nullptr};
+	char symbol{};
+	std::string bits;
 	
 public:
 	HuffLeaf(const char symbol);
 	
-	HuffLeaf(const HuffLeaf&) = default;
-	HuffLeaf(HuffLeaf&&) = default;
-	
-	HuffLeaf& operator=(const HuffLeaf&)  = default;
-	HuffLeaf& operator=(HuffLeaf&&) = default;
-
 	char GetSymbol() const; 
 
-	void SetBits(_In_count_(MAX_BITS_HUFFMAN) int arr[MAX_BITS_HUFFMAN]);
+	void SetBits(const _In_ std::string& binString);
 	
 	std::string GetBitString() const;
 	
 	void PrintBits() const;
 
-	bool CmpBits(_In_count_(MAX_BITS_HUFFMAN) int arr[MAX_BITS_HUFFMAN]);
-
 	void PrintSymbol() const;
-	
-	~HuffLeaf() = default;
 };
-
 
 class Huffman
 {
+	using LeafMap = std::map<char, HuffLeaf>;
+	
 	HuffNode* root{ nullptr };
 
 	std::string text;
 	
-	std::map<char, HuffLeaf> charMap;
+	LeafMap leafMap;
 
 	void GenerateTree();
-	void GenerateBits(_In_ HuffNode* node, _In_ int* arrPtr, _In_count_(MAX_BITS_HUFFMAN) int arr[MAX_BITS_HUFFMAN]);
+	
 public:
-	const HuffNode* GetRoot() const;
 	Huffman(const _In_ std::string& text);
-	void Compress();
-	void Decompress();
+
+	static void Encode(_In_ HuffNode* node, const std::string binText);
+	
+	static void Decode(const _In_ HuffNode* node, _Inout_ int& index, _In_ const std::string& binString);
+
+	void DecodeAndPrint(const _In_ HuffNode* node, _In_ const std::string& binaryString) const;
+	
+	const HuffNode* GetRoot() const;
+
+	const std::string& GetSavedText() const;
+
+	const LeafMap& GetLeafMap() const;
+	
+	void Compress(const std::string& path);
+	void Decompress(const std::string& path);
 };
